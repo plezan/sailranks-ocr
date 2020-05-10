@@ -69,31 +69,43 @@ function matchResults( rawResults, players ) {
 }
 
 
-function matchInList(s,list){
-  let min = {d:Infinity};
-  for(let i=0;i<list.length;i++){
-    let d = ldist(s,list[i]);
-    console.log({d},list[i]);
-    if( d==0 ) return list[i];
-    if( d<min.d ){
-      min.d = d;
-      min.i = i;
+function matchInList(s,list,limit = 20){
+  
+  //* setup the possibiolities
+  let possibilities = list.map(possibility=>({
+    tested  : ''+s,
+    against : ''+possibility,
+    original: ''+possibility
+  }));
+
+  do {
+    
+    //* check every possiblities
+    for (const possibility of possibilities) {
+      if( possibility.tested == possibility.against ) return possibility.original;
     }
-  }
-  return list[min.i];
-}
+    
+    //* get new possibilities
+    const old_possibilities = [...possibilities];
+    possibilities = [];
+  
+    for (const possibility of old_possibilities) {
+      
+      //* ignore the firsts characters if they are the same.
+      while (possibility.tested[0] == possibility.against[0]) {
+        possibility.tested = possibility.tested.slice(1);
+        possibility.against = possibility.against.slice(1);
+      }
 
-
-function ldist(s1, s2){
-	if(!s1) return s2.length;
-  if(!s2) return s1.length;
-  if(s1[0]==s2[0]) return ldist(s1.slice(1),s2.slice(1));
-
-	return 1+Math.min(
-    ldist(s1.slice(1),s2),
-    ldist(s1,s2.slice(1)),
-    ldist(s1.slice(1),s2.slice(1))
-  );
+      possibilities.push(
+        {...possibility, tested:  possibility.tested.slice(1)  },
+        {...possibility, against: possibility.against.slice(1) },
+        {...possibility, tested:  possibility.tested.slice(1), against: possibility.against.slice(1)}
+      );
+      // todo : avoid doublons
+    }
+          
+  } while (--limit > 0);
 }
 
 
